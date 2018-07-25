@@ -1,7 +1,7 @@
 import logging
 
 
-class Loggersettings:
+class Logging:
 
     class Settings:
         formatter = '[%(asctime)s] [%(levelname)s] [%(name)s: %(filename)s-%(lineno)d: %(funcName)s] %(message)s'
@@ -10,21 +10,23 @@ class Loggersettings:
     def __init__(self, levelname=logging.DEBUG):
         self.levelname = levelname
 
-    def output_handler(self, levelname=None, formatter_str=None):
+    @classmethod
+    def output_handler(cls, levelname=None, formatter_str=None):
 
         level = levelname
-        formatter = logging.Formatter(formatter_str) if formatter_str else logging.Formatter(self.Settings.formatter)
+        formatter = logging.Formatter(formatter_str) if formatter_str else logging.Formatter(cls.Settings.formatter)
 
         s = logging.StreamHandler()
         s.setFormatter(formatter)
         s.setLevel(level)
         return s
 
-    def set(self, logger_module=None, handlers=None, hlevelname="DEBUG", formatter=None):
-        logger_module = logger_module if logger_module else __name__
+    def set_logger(self, logger_name=None, handlers=None, hlevelname="DEBUG", formatter=None):
+
+        logger_name = logger_name if logger_name else __name__
         handlers = handlers if handlers else self.output_handler(levelname=hlevelname, formatter_str=formatter)
 
-        Logger = logging.getLogger(logger_module)
+        Logger = logging.getLogger(logger_name)
 
         if not isinstance(handlers, list):
 
@@ -37,8 +39,10 @@ class Loggersettings:
 
     def output(self, name):
         handler = self.output_handler(logging.DEBUG, self.Settings.simple_formater)
-
         Logger = logging.getLogger(name)
         Logger.addHandler(handler)
-
         Logger.setLevel(self.levelname)
+
+    @staticmethod
+    def get_logger(name):
+        return logging.getLogger(name)
