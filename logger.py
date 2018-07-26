@@ -1,7 +1,22 @@
 import logging
+from json import dumps
 
 
-class Logging:
+__all__ = ['LoggerStr', 'Loggersettings']
+
+
+def LoggerStr(content, *args, **kwargs):
+
+    if isinstance(content, (dict, list, tuple)):
+        return dumps(content, indent=4, *args, **kwargs)
+
+    if isinstance(content, Exception):
+        return content.__class__.__name__ + ": " + str(content)
+
+    return content
+
+
+class Loggersettings:
 
     class Settings:
         formatter = '[%(asctime)s] [%(levelname)s] [%(name)s: %(filename)s-%(lineno)d: %(funcName)s] %(message)s'

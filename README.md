@@ -8,7 +8,7 @@ from server import Aquarius
 app = Aquarius(__name__)
 
 
-@app.router
+@app.router.add("/test", required_method=("GET",))
 def test(request):
     return request.to_response("Hello Word")
 

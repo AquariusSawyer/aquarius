@@ -1,5 +1,6 @@
 import re
 from functools import partial
+import logging
 
 import asyncio
 import uvloop
@@ -13,12 +14,6 @@ except ImportError:
 from msic import iscoroutinefunction
 
 
-LS = Loggersettings()
-LS.output("aquarius")
-
-logger = logging.getLogger("aquarius")
-
-
 RESPONSE_HERD = (
     "HTTP/1.1 {status}\r\n"
     "Content-Type: {content_type}; charset=utf-8\r\n"
@@ -26,6 +21,9 @@ RESPONSE_HERD = (
     "{cookie}"
     "Content-Length:{length}\r\n\r\n"
 )
+
+
+Logger = logging.getLogger("server")
 
 
 class ResponseBase:
@@ -64,6 +62,7 @@ class ResponseBase:
 
 
 class HTTPResponse(ResponseBase):
+    
     def __call__(self, content):
         self.body = content
 
@@ -89,8 +88,6 @@ class Request(object):
         self.headers = {}
         self.body = []
 
-        self.has_token = False
-
     @property
     def url(self):
         return self.uri.split("?", 1)[0]
@@ -111,8 +108,9 @@ class Request(object):
     def request_args(self):
         return self.__query_string_parameters()
 
-    @staticmethod
-    def to_response(content, status=200):
+    def to_response(self, content, status=200):
+        Logger.debug('\"{method} {uri} HTTP/{version}\" {status}'.format(method=self.method, uri=self.uri, status=status, version=self.version))
+
         return HTTPResponse(status)(content)
 
 
@@ -277,7 +275,7 @@ if __name__ == '__main__':
 
     app = Aquarius(__name__)
 
-    @app.router.add("/test")
+    @app.router.add("/test/")
     def index(request):
         return request.to_response("/test")
 
