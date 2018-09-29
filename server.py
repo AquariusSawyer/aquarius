@@ -223,8 +223,7 @@ class RouterConfig:
 
         def __router__add(view):
 
-            view.async = True if iscoroutinefunction(view) else False
-
+            view.async = iscoroutinefunction(view)
             view.allowed_method = required_method if isinstance(required_method, tuple) else self.allowed_method
 
             self.update(path, view)
