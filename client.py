@@ -13,3 +13,4 @@ async def request_open(url):
         html = await fetch(session, 'http://' + url)
 
     return html
+

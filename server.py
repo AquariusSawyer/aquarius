@@ -11,8 +11,10 @@ try:
 except ImportError:
     import json
 
-from msic import iscoroutinefunction
+from inspect import iscoroutinefunction
 
+
+VERSION = "1.0"
 
 RESPONSE_HERD = (
     "HTTP/1.1 {status}\r\n"
@@ -43,7 +45,7 @@ class ResponseBase:
         set_hd = RESPONSE_HERD.format(
             status=self.status_code,
             content_type=self.body_type,
-            server="aquarius",
+            server="aquarius %s" % VERSION,
             cookie=self.__cookie_set(),
             length=nums_body
         )
@@ -109,7 +111,7 @@ class Request(object):
         return self.__query_string_parameters()
 
     def to_response(self, content, status=200):
-        Logger.debug('\"{method} {uri} HTTP/{version}\" {status}'.format(method=self.method, uri=self.uri, status=status, version=self.version))
+        Logger.info('\"{method} {uri} HTTP/{version}\" {status}'.format(method=self.method, uri=self.uri, status=status, version=self.version))
 
         return HTTPResponse(status)(content)
 
@@ -250,6 +252,8 @@ class Aquarius:
         if self._name != "__main__":
             return
 
+        Logger.info("aquarius start")
+
         asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
         loop = asyncio.get_event_loop()
 
@@ -262,7 +266,7 @@ class Aquarius:
         try:
             loop.run_until_complete(server.wait_closed())
         except KeyboardInterrupt:
-            print("\r\nserver is closing")
+            Logger.info("aquarius Byebye")
         finally:
             loop.close()
 
