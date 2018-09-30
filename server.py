@@ -79,7 +79,7 @@ class HTTPResponse(ResponseBase):
         return self.bytes_response()
 
 
-class Request(object):
+class Request:
 
     __slots__ = ("uri", "version", "method", "headers", "body", "has_token")
 
@@ -120,12 +120,12 @@ class HttpProtocol(asyncio.Protocol):
 
     __slots__ = ("_route_", "_loop", "_transport", "_parser", "_request")
 
-    def __init__(self, event_loop=None, route=None):
+    def __init__(self, event_loop=None, route=None, objt_request=None):
         self._route = route
         self._loop = event_loop
         self._transport = None
         self._parser = HttpRequestParser(self)
-        self._request = Request()
+        self._request = objt_request()
 
     def connection_made(self, transport):
         self._transport = transport
@@ -134,7 +134,7 @@ class HttpProtocol(asyncio.Protocol):
         try:
             self._parser.feed_data(data)
         except HttpParserError:
-            pass
+            Logger.info("bad request")
 
     def connection_lost(self, exc):
         self._transport.close()
@@ -237,14 +237,17 @@ class Aquarius:
 
         router_new = RouterConfig
         protocol = HttpProtocol
+        request_objt = Request
 
-    def __init__(self, name=None, protocol=None, router_cls=None):
+    def __init__(self, name=None, protocol=None, router_cls=None, objt_request=None):
 
-        self._protocol = protocol if protocol else self.__class__.Settings.protocol
-        self._router = router_cls if router_cls else self.__class__.Settings.router_new()
+        self._protocol = protocol or self.__class__.Settings.protocol
+        self._router = router_cls or self.__class__.Settings.router_new()
 
         self._name = name
         self._loop = None
+
+        self._request_objt = objt_request or self.__class__.Settings.request_objt
 
     def run(self, host="0.0.0.0", port=8000):
 
@@ -258,7 +261,7 @@ class Aquarius:
 
         self._loop = loop
 
-        _protocol = partial(self._protocol, loop, self._router)
+        _protocol = partial(self._protocol, loop, self._router, self._request_objt)
 
         server_coro = loop.create_server(_protocol, host=host, port=port)
         server = loop.run_until_complete(server_coro)
@@ -283,3 +286,4 @@ if __name__ == '__main__':
         return request.to_response("/test")
 
     app.run()
+
